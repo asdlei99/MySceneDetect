@@ -9,26 +9,25 @@ def scenedetect(cap, threshold=30):
     w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     downscale_factor = int(w / 200)
     last_hsv = None
-    first = None
-    i = 0
+    first = 0
+    curr = 0
 
     while True:
         ret, im = cap.read()
         if not ret:
             break
 
-        curr_hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV).astype('int32')
-        curr_hsv = curr_hsv[::downscale_factor, ::downscale_factor]
-        if first is None:
-            first = i
-        else:
+        curr_hsv = im[::downscale_factor, ::downscale_factor]
+        curr_hsv = cv2.cvtColor(curr_hsv, cv2.COLOR_BGR2HSV)
+        curr_hsv = curr_hsv.astype('int32')
+        if last_hsv is not None:
             delta_hsv = np.mean(np.abs(curr_hsv - last_hsv))
             if delta_hsv >= threshold:
-                yield first, i, delta_hsv
-                first = None
+                yield first, curr, delta_hsv
+                first = curr
 
         last_hsv = curr_hsv
-        i += 1
+        curr += 1
 
 
 fn = 'video.rmvb'
@@ -36,7 +35,5 @@ cap = cv2.VideoCapture(fn)
 start = time.time()
 for first, last, delta_hsv in scenedetect(cap):
     print(first, last, delta_hsv)
-    sys.stdout.flush()
 print(time.time() - start)
 cap.release()
-PySceneDetect
