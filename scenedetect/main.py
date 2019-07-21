@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 
-def scenedetect(cap, threshold=30):
+def scenedetect(cap, threshold=30, min_scene_len=15):
     w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     downscale_factor = int(w / 200)
     last_hsv = None
@@ -22,12 +22,13 @@ def scenedetect(cap, threshold=30):
         curr_hsv = curr_hsv.astype('int32')
         if last_hsv is not None:
             delta_hsv = np.mean(np.abs(curr_hsv - last_hsv))
-            if delta_hsv >= threshold:
+            if delta_hsv >= threshold and curr - first >= min_scene_len:
                 yield first, curr, delta_hsv
                 first = curr
 
         last_hsv = curr_hsv
         curr += 1
+    yield first, curr, 0
 
 
 fn = 'video.rmvb'
